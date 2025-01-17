@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "AlaireTV": {
+      "commandName": "Project",
+      "workingDirectory": "$(ProjectDir)",
+      "nativeDebugging": true,
+      "args": "",
+      "dotnetRunMessages": true
+    }
+  }
+}

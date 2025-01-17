@@ -1,0 +1,8 @@
+<Window x:Class="AlaireTV.MainWindow" 
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="AlaireTV" Height="450" Width="800">
+    <Grid>
+        <MediaElement Name="myMediaElement" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+    </Grid>
+</Window>
