@@ -1,10 +1,56 @@
 <Window x:Class="AlaireTV.ScheduleWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Programacion" Height="300" Width="400">
+        Title="Schedule Content" Height="350" Width="525">
     <Grid>
-        <TextBox Name="TitleTextBox" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="10"/>
-        <DatePicker Name="StartDatePicker" HorizontalAlignment="Stretch" VerticalAlignment="Top" Margin="10,40,10,10"/>
-        <ListBox Name="ProgramListBox" HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="10,150,10,10"/>
+        <!-- Campo de texto con comportamiento de marcador de posicion -->
+        <Grid>
+            <!-- Label como marcador de posicion -->
+            <Label x:Name="PlaceholderLabel" Content="Escriba el titulo del contenido"
+                   Foreground="Gray" HorizontalAlignment="Left"
+                   VerticalAlignment="Top" Margin="125,25,0,0"
+                   IsEnabled="False" />
+            <TextBox x:Name="_titleTextBox"
+                     HorizontalAlignment="Left"
+                     Margin="125,25,0,0"
+                     VerticalAlignment="Top"
+                     Width="120"
+                     Text="{Binding FilePath}" />
+        </Grid>
+
+        <!-- Selector de fecha para la fecha de inicio -->
+        <DatePicker x:Name="_startDatePicker" 
+                    HorizontalAlignment="Left" 
+                    Margin="125,70,0,0" 
+                    VerticalAlignment="Top" 
+                    Width="120"
+                    SelectedDate="{Binding StartTime}" />
+
+        <!-- Boton "Agregar" que ejecuta la funcion OkButton_Click -->
+        <Button Content="Agregar" 
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top" 
+                Width="75" 
+                Height="25" 
+                Margin="125,115,0,0" 
+                Click="OkButton_Click"/>
+
+        <!-- Boton "Eliminar" que ejecuta la funcion CancelButton_Click -->
+        <Button Content="Eliminar" 
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top" 
+                Width="75" 
+                Height="25" 
+                Margin="210,115,0,0" 
+                Click="CancelButton_Click"/>
+
+        <!-- Boton para programar recurrentemente, con evento definido -->
+        <Button Content="Programar Recurrente" 
+                HorizontalAlignment="Left" 
+                VerticalAlignment="Top" 
+                Width="120" 
+                Height="25" 
+                Margin="125,160,0,0" 
+                Click="RecurrentScheduleButton_Click"/>
     </Grid>
 </Window>

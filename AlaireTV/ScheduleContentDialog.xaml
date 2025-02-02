@@ -3,49 +3,10 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Programación de Contenidos" Height="350" Width="525">
     <Grid>
-        <!-- Campo de texto para el título -->
-        <TextBox x:Name="_titleTextBox" 
-                 HorizontalAlignment="Left" 
-                 Margin="125,25,0,0" 
-                 VerticalAlignment="Top" 
-                 Width="120"
-                 Text="{Binding FilePath}" />
-        <!-- Enlace de datos con la propiedad FilePath -->
-
-        <!-- Selector de fecha para la fecha de inicio -->
-        <DatePicker x:Name="_startDatePicker" 
-                    HorizontalAlignment="Left" 
-                    Margin="125,70,0,0" 
-                    VerticalAlignment="Top" 
-                    Width="120"
-                    SelectedDate="{Binding StartTime}" />
-        <!-- Enlace de datos con la propiedad StartTime -->
-
-        <!-- Botón "Agregar" que ejecuta la función OkButton_Click -->
-        <Button Content="Agregar" 
-                HorizontalAlignment="Left" 
-                VerticalAlignment="Top" 
-                Width="75" 
-                Height="25" 
-                Margin="125,115,0,0" 
-                Click="OkButton_Click"/>
-
-        <!-- Botón "Eliminar" que ejecuta la función CancelButton_Click -->
-        <Button Content="Eliminar" 
-                HorizontalAlignment="Left" 
-                VerticalAlignment="Top" 
-                Width="75" 
-                Height="25" 
-                Margin="210,115,0,0" 
-                Click="CancelButton_Click"/>
-
-        <!-- Botón para programar recurrentemente, con evento definido -->
-        <Button Content="Programar Recurrente" 
-                HorizontalAlignment="Left" 
-                VerticalAlignment="Top" 
-                Width="120" 
-                Height="25" 
-                Margin="125,160,0,0" 
-                Click="RecurrentScheduleButton_Click"/>
+        <TextBox x:Name="_titleTextBox" HorizontalAlignment="Left" Margin="125,25,0,0" VerticalAlignment="Top" Width="120" Text="{Binding FilePath}" />
+        <DatePicker x:Name="_startDatePicker" HorizontalAlignment="Left" Margin="125,70,0,0" VerticalAlignment="Top" Width="120" SelectedDate="{Binding StartTime}" />
+        <Button Content="Agregar" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Height="25" Margin="125,115,0,0" Click="OkButton_Click"/>
+        <Button Content="Eliminar" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Height="25" Margin="210,115,0,0" Click="CancelButton_Click"/>
+        <Button Content="Programar Recurrente" HorizontalAlignment="Left" VerticalAlignment="Top" Width="120" Height="25" Margin="125,160,0,0" Click="RecurrentScheduleButton_Click"/>
     </Grid>
 </Window>

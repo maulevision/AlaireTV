@@ -1,4 +1,6 @@
-﻿namespace AlaireTV
+using System;
+
+namespace AlaireTV
 {
     public class ScheduledContent
     {
