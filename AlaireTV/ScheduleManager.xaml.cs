@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 
 namespace AlaireTV
 {
@@ -14,9 +9,6 @@ namespace AlaireTV
             InitializeComponent();
         }
 
-        private void AddProgram_Click(object sender, RoutedEventArgs e)
-        {
-            // Logica para añadir programas
-        }
+        // Eventos y métodos relacionados con la interfaz de usuario
     }
 }

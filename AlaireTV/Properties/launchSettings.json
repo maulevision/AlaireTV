@@ -1,11 +1,14 @@
 {
-  "profiles": {
-    "AlaireTV": {
-      "commandName": "Project",
-      "workingDirectory": "$(ProjectDir)",
-      "nativeDebugging": true,
-      "args": "",
-      "dotnetRunMessages": true
+    "profiles": {
+        "AlaireTV": {
+            "commandName": "Project",
+            "workingDirectory": "$(ProjectDir)",
+            "executablePath": "$(TargetDir)altv.exe",
+            "launchBrowser": false,
+            "environmentVariables": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "applicationUrl": "http://localhost:5000"
+        }
     }
-  }
 }

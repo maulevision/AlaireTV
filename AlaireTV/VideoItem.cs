@@ -2,8 +2,9 @@
 {
     public class VideoItem
     {
-        public string FilePath { get; set; }
-        public string VideoTitle { get; set; }
-        public TimeSpan VideoDuration { get; set; }
+        public string Title { get; set; }
+        public string VideoPath { get; set; }
+        public DateTime Date { get; set; }
+        public string Duration { get; set; }
     }
 }

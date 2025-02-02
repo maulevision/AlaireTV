@@ -1,82 +1,69 @@
 ﻿using System;
 using System.Windows;
 using System.Collections.Generic;
+using System.Windows.Controls;
 
 namespace AlaireTV
 {
     public partial class ScheduleWindow : Window
     {
-        private List<ScheduledProgram> ProgramList = new List<ScheduledProgram>();  // Lista para almacenar los programas
-        private ScheduleManager scheduleManager = new ScheduleManager();  // Instancia de ScheduleManager
+        private List<ScheduledProgram> ProgramList = new List<ScheduledProgram>();
+        private ScheduleManager scheduleManager;
 
-        public ScheduleWindow()
+        public ScheduleWindow(ScheduleManager manager)
         {
             InitializeComponent();
-            LoadPrograms(); // Llamar al método para cargar los programas al iniciar la ventana
+            scheduleManager = manager;
+            LoadPrograms();
         }
 
         private void LoadPrograms()
         {
-            // Ejemplo de carga de programas. Se puede sustituir por la carga desde una base de datos o archivo.
-            ProgramList.Add(new ScheduledProgram { Title = "Programa 1", StartDate = DateTime.Now });
-            ProgramList.Add(new ScheduledProgram { Title = "Programa 2", StartDate = DateTime.Now.AddDays(1) });
-
-            ProgramListBox.ItemsSource = ProgramList; // Asegúrate de tener un ListBox llamado ProgramListBox en tu XAML
-        }
-
-        private void SelectVideo_Click(object sender, RoutedEventArgs e)
-        {
-            Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog
-            {
-                Filter = "Archivos de Video|*.mp4;*.avi;*.mkv",
-                Title = "Seleccionar Video"
-            };
-
-            if (openFileDialog.ShowDialog() == true)
-            {
-                VideoPathTextBox.Text = openFileDialog.FileName;
-            }
+            ProgramListBox.ItemsSource = null; // Limpiar la fuente de datos antes de actualizarla
+            ProgramList = scheduleManager.GetSchedules(); // Obtener los programas programados desde ScheduleManager
+            ProgramListBox.ItemsSource = ProgramList; // Asignar la lista a la fuente de datos del ListBox
         }
 
         private void AddSchedule_Click(object sender, RoutedEventArgs e)
         {
             string title = TitleTextBox.Text;
             DateTime? selectedDate = StartDatePicker.SelectedDate;
-            string videoPath = VideoPathTextBox.Text;
 
-            if (string.IsNullOrWhiteSpace(title) || !selectedDate.HasValue || string.IsNullOrWhiteSpace(videoPath))
+            if (string.IsNullOrWhiteSpace(title) || !selectedDate.HasValue)
             {
                 MessageBox.Show("Por favor, complete todos los campos.");
                 return;
             }
 
-            scheduleManager.AddSchedule(title, selectedDate.Value, videoPath);
-            LoadSchedules();
+            scheduleManager.AddSchedule(title, selectedDate.Value, TimeSpan.FromMinutes(30), ""); // Ruta del video vacía por ahora
+            LoadPrograms(); // Actualizar la lista de programas programados
             ClearFields();
         }
 
-        private void LoadSchedules()
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
-            // Cargar las programaciones desde ScheduleManager
-            ProgramListBox.Items.Clear();
-            foreach (var schedule in scheduleManager.GetSchedules())
+            if (ProgramListBox.SelectedItem != null)
             {
-                ProgramListBox.Items.Add(schedule.ToString());
+                ScheduledProgram selectedProgram = (ScheduledProgram)ProgramListBox.SelectedItem;
+                scheduleManager.RemoveSchedule(selectedProgram);
+                LoadPrograms(); // Actualizar la lista de programas programados
             }
+            else
+            {
+                MessageBox.Show("Por favor, seleccione un programa para eliminar.");
+            }
+        }
+
+        private void RecurrentScheduleButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Lógica para programar contenido de manera recurrente
+            MessageBox.Show("Funcionalidad de programación recurrente aún no implementada.");
         }
 
         private void ClearFields()
         {
             TitleTextBox.Text = string.Empty;
             StartDatePicker.SelectedDate = null;
-            VideoPathTextBox.Text = string.Empty;
         }
-    }
-
-    // Clase para representar la programación
-    public class ScheduledProgram
-    {
-        public string Title { get; set; }
-        public DateTime StartDate { get; set; }
     }
 }

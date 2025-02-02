@@ -1,8 +1,21 @@
-<Window x:Class="AlaireTV.MainWindow" 
+<Window x:Class="AlaireTV.VideoPlayer"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="AlaireTV" Height="450" Width="800">
+        Title="Reproductor de Video" Height="450" Width="800"
+        WindowStartupLocation="CenterScreen">
     <Grid>
-        <MediaElement Name="myMediaElement" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+        <!-- Reproductor de Video -->
+        <MediaElement Name="myMediaElement" 
+                      HorizontalAlignment="Stretch" 
+                      VerticalAlignment="Stretch"
+                      LoadedBehavior="Manual"
+                      UnloadedBehavior="Stop"/>
+
+        <!-- Controles de Reproduccion -->
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="10">
+            <Button Content="Reproducir" Width="100" Margin="5" Click="PlayButton_Click"/>
+            <Button Content="Pausar" Width="100" Margin="5" Click="PauseButton_Click"/>
+            <Button Content="Detener" Width="100" Margin="5" Click="StopButton_Click"/>
+        </StackPanel>
     </Grid>
 </Window>

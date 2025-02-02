@@ -1,12 +1,54 @@
 <Window x:Class="AlaireTV.ScheduleContentDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Programación de Contenidos" Height="350" Width="525">
+        Title="Programación de Contenidos" 
+        Height="350" 
+        Width="525"
+        WindowStartupLocation="CenterScreen">
     <Grid>
-        <TextBox x:Name="_titleTextBox" HorizontalAlignment="Left" Margin="125,25,0,0" VerticalAlignment="Top" Width="120" Text="{Binding FilePath}" />
-        <DatePicker x:Name="_startDatePicker" HorizontalAlignment="Left" Margin="125,70,0,0" VerticalAlignment="Top" Width="120" SelectedDate="{Binding StartTime}" />
-        <Button Content="Agregar" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Height="25" Margin="125,115,0,0" Click="OkButton_Click"/>
-        <Button Content="Eliminar" HorizontalAlignment="Left" VerticalAlignment="Top" Width="75" Height="25" Margin="210,115,0,0" Click="CancelButton_Click"/>
-        <Button Content="Programar Recurrente" HorizontalAlignment="Left" VerticalAlignment="Top" Width="120" Height="25" Margin="125,160,0,0" Click="RecurrentScheduleButton_Click"/>
+        <!-- Diseño reorganizado usando filas para mejor disposición -->
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Título del Contenido -->
+        <Label Content="Título:" Grid.Row="0" Grid.Column="0" Margin="5"/>
+        <TextBox x:Name="_titleTextBox" Grid.Row="0" Grid.Column="1" Margin="5"
+                 Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <!-- Fecha de Inicio -->
+        <Label Content="Fecha de Inicio:" Grid.Row="1" Grid.Column="0" Margin="5"/>
+        <DatePicker x:Name="_startDatePicker" Grid.Row="1" Grid.Column="1" Margin="5"
+                    SelectedDate="{Binding StartDate, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <!-- Hora de Inicio -->
+        <Label Content="Hora de Inicio:" Grid.Row="2" Grid.Column="0" Margin="5"/>
+        <TextBox x:Name="_startTimeTextBox" Grid.Row="2" Grid.Column="1" Margin="5"
+                 Text="{Binding StartTime, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <!-- Hora de Fin -->
+        <Label Content="Hora de Fin:" Grid.Row="3" Grid.Column="0" Margin="5"/>
+        <TextBox x:Name="_endTimeTextBox" Grid.Row="3" Grid.Column="1" Margin="5"
+                 Text="{Binding EndTime, UpdateSourceTrigger=PropertyChanged}"/>
+
+        <!-- Botones reorganizados -->
+        <StackPanel Grid.Row="4" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,15">
+            <Button Content="Aceptar" Width="75" Margin="5" Click="OkButton_Click"/>
+            <Button Content="Cancelar" Width="75" Margin="5" Click="CancelButton_Click"/>
+        </StackPanel>
+
+        <Button Content="Programar Recurrente" Grid.Row="5" Grid.ColumnSpan="2"
+                HorizontalAlignment="Center" Margin="5" Width="120"
+                Click="RecurrentScheduleButton_Click"/>
     </Grid>
 </Window>

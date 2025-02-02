@@ -1,225 +1,199 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Timers; // Aseguramos el uso de System.Timers.Timer
-using Microsoft.Win32; // Para abrir cuadros de diálogo de archivos
-using MediaToolkit;
-using System.Windows.Media;
-// Biblioteca para reproducción y grabación de video (necesaria implementación real)
+using System.Windows.Threading;
+using System.Text.Json;
 
 namespace AlaireTV
 {
     public partial class MainWindow : Window
     {
-        private List<ScheduledContent> _scheduledContentList;
-        private PlaylistManager _playlistManager;
-        private Timer _commercialTimer;
-        private int _commercialIntervalMinutes = 15; // Intervalo de comerciales en minutos
-        private Timer _backgroundPlaybackTimer; // Reproducción en segundo plano
-        private MediaPlayer _mediaPlayer; // Controlador para la reproducción de video
-        private string _recordingOutputPath = @"C:\Path\To\Recordings"; // Ruta donde se guardarán las grabaciones
+        private MediaPlayerManager _playerManager;
+        private List<string> _contentList;
+        private List<VideoItem> _scheduledVideos;
+        private DispatcherTimer _playbackTimer;
+        private DispatcherTimer _commercialTimer;
+        private int _currentVideoIndex;
+        private string _dataFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "playout_data.json");
 
         public MainWindow()
         {
             InitializeComponent();
-            _scheduledContentList = new List<ScheduledContent>();
-            _playlistManager = new PlaylistManager(@"C:\Path\To\Videos"); // Ruta donde están los videos
-            _mediaPlayer = new MediaPlayer(); // Inicialización del reproductor multimedia
-            EnsureDirectoriesExist();
-            SetupCommercialTimer();
-            SetupBackgroundPlaybackTimer();
+            _playerManager = new MediaPlayerManager();
+            _contentList = new List<string>();
+            _scheduledVideos = LoadData() ?? new List<VideoItem>();
+            ScheduleDataGrid.ItemsSource = _scheduledVideos;
+            VolumeSlider.Value = 50; // Volumen predeterminado
+
+            _playbackTimer = new DispatcherTimer();
+            _playbackTimer.Interval = TimeSpan.FromSeconds(1);
+            _playbackTimer.Tick += PlaybackTimer_Tick;
+
+            _commercialTimer = new DispatcherTimer();
+            _commercialTimer.Interval = TimeSpan.FromMinutes(CommercialIntervalSlider.Value);
+            _commercialTimer.Tick += CommercialTimer_Tick;
+
+            _playerManager.EndReached += PlayerManager_EndReached;
         }
 
-        // Verifica que las carpetas necesarias existan
-        private void EnsureDirectoriesExist()
-        {
-            Directory.CreateDirectory(_playlistManager.BasePath);
-            Directory.CreateDirectory(_recordingOutputPath);
-        }
-
-        // Manejo de errores con una función genérica
-        private void HandleError(Action action, string errorMessage)
-        {
-            try
-            {
-                action();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"{errorMessage}\nDetalles: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        // Configuración del temporizador para comerciales
-        private void SetupCommercialTimer()
-        {
-            _commercialTimer = new Timer(_commercialIntervalMinutes * 60 * 1000); // Convertir minutos a milisegundos
-            _commercialTimer.Elapsed += CommercialTimer_Elapsed;
-            _commercialTimer.Start();
-        }
-
-        // Lógica para activar comerciales automáticamente
-        private void CommercialTimer_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            Dispatcher.Invoke(() =>
-            {
-                Console.WriteLine("¡Es hora de un comercial!");
-                PlayCommercials();
-            });
-        }
-
-        // Lógica para reproducir comerciales
-        private void PlayCommercials()
-        {
-            var commercialPlaylist = _playlistManager.GetCommercialsPlaylist();
-            foreach (var commercial in commercialPlaylist)
-            {
-                PlayVideo(commercial);
-                Console.WriteLine($"Reproduciendo comercial: {commercial}");
-            }
-        }
-
-        // Función para agregar contenido a la parrilla de programación
         private void AddContentButton_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new OpenFileDialog
+            string filePath = OpenFileDialogToSelectVideo();
+            if (!string.IsNullOrEmpty(filePath))
             {
-                Filter = "Archivos de video|*.mp4;*.avi;*.mkv",
-                Multiselect = true
-            };
+                _contentList.Add(filePath);
+                ContentListBox.Items.Add(System.IO.Path.GetFileName(filePath));
+            }
+        }
 
-            if (dialog.ShowDialog() == true)
+        private string OpenFileDialogToSelectVideo()
+        {
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            dlg.FileName = "Document"; // Default file name
+            dlg.DefaultExt = ".mp4"; // Default file extension
+            dlg.Filter = "Video files (.mp4)|*.mp4"; // Filter files by extension
+
+            bool? result = dlg.ShowDialog();
+            if (result == true)
             {
-                foreach (var file in dialog.FileNames)
+                return dlg.FileName;
+            }
+            return null;
+        }
+
+        private void StartPlaybackButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (ContentListBox.SelectedItem != null)
+            {
+                string selectedPath = _contentList[ContentListBox.SelectedIndex];
+                _playerManager.Play(selectedPath);
+                UpdateNowPlayingText(selectedPath);
+                _playbackTimer.Start();
+            }
+        }
+
+        private void SchedulePlaylistButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (ContentListBox.SelectedItem != null)
+            {
+                string selectedPath = _contentList[ContentListBox.SelectedIndex];
+                var newItem = new VideoItem()
                 {
-                    var scheduledContent = new ScheduledContent { FilePath = file };
-                    _scheduledContentList.Add(scheduledContent);
-                    ContentListBox.Items.Add(file);
-                }
-
-                UpdateScheduleGrid();
+                    Title = System.IO.Path.GetFileName(selectedPath),
+                    VideoPath = selectedPath,
+                    Date = DateTime.Now,
+                    Duration = TimeSpan.FromMilliseconds(_playerManager.GetDuration()).ToString(@"hh\:mm\:ss")
+                };
+                _scheduledVideos.Add(newItem);
+                ScheduleDataGrid.Items.Refresh();
+                SaveData();
             }
         }
 
-        // Actualiza la parrilla de programación en el DataGrid
-        private void UpdateScheduleGrid()
+        private void StartRecordingButton_Click(object sender, RoutedEventArgs e)
         {
-            ScheduleDataGrid.ItemsSource = null; // Asegurarnos de que ScheduleDataGrid esté definido en XAML
-            ScheduleDataGrid.ItemsSource = _scheduledContentList;
+            string outputPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), "recording.mp4");
+            _playerManager.StartRecording(outputPath);
+            NotificationText.Text = "Grabación iniciada.";
         }
 
-        // Función para iniciar la reproducción de la lista de reproducción aleatoria
-        private void StartButton_Click(object sender, RoutedEventArgs e)
+        private void StopRecordingButton_Click(object sender, RoutedEventArgs e)
         {
-            var selectedPlaylist = _playlistManager.GetRandomPlaylist(60); // Duración de 60 minutos
-            foreach (var video in selectedPlaylist)
+            _playerManager.StopRecording();
+            NotificationText.Text = "Grabación detenida.";
+        }
+
+        private void PauseButton_Click(object sender, RoutedEventArgs e)
+        {
+            _playerManager.Pause();
+        }
+
+        private void StopButton_Click(object sender, RoutedEventArgs e)
+        {
+            _playerManager.Stop();
+            NowPlayingText.Text = "Reproducción detenida.";
+        }
+
+        private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            _playerManager.SetVolume((int)VolumeSlider.Value);
+        }
+
+        private void StartCommercialsButton_Click(object sender, RoutedEventArgs e)
+        {
+            _commercialTimer.Interval = TimeSpan.FromMinutes(CommercialIntervalSlider.Value);
+            _commercialTimer.Start();
+            NotificationText.Text = $"Comerciales iniciados con un intervalo de {CommercialIntervalSlider.Value} minutos.";
+        }
+
+        private void AddBannerButton_Click(object sender, RoutedEventArgs e)
+        {
+            string bannerPath = OpenFileDialogToSelectVideo();
+            if (!string.IsNullOrEmpty(bannerPath))
             {
-                PlayVideo(video);
-                Console.WriteLine($"Reproduciendo: {video}");
+                _playerManager.AddBanner(bannerPath, 10, 10);
+                NotificationText.Text = "Banner añadido.";
             }
         }
 
-        // Función para grabar la transmisión
-        private void RecordButton_Click(object sender, RoutedEventArgs e)
+        private void ActivateTransitionButton_Click(object sender, RoutedEventArgs e)
         {
-            HandleError(() =>
+            NotificationText.Text = "Transición activada.";
+        }
+
+        private void UpdateNowPlayingText(string path)
+        {
+            NowPlayingText.Text = $"Reproduciendo: {System.IO.Path.GetFileName(path)}";
+        }
+
+        private void ConfigurationButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Implementación para abrir la ventana de configuración
+        }
+
+        private void ReportsButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Implementación para generar y mostrar reportes
+        }
+
+        private void PlaybackTimer_Tick(object sender, EventArgs e)
+        {
+            ProgressBar.Value = _playerManager.GetCurrentTime();
+        }
+
+        private void CommercialTimer_Tick(object sender, EventArgs e)
+        {
+            // Lógica para insertar comerciales
+            NotificationText.Text = "Insertando comerciales...";
+        }
+
+        private void PlayerManager_EndReached(object sender, EventArgs e)
+        {
+            // Lógica para reproducir el siguiente video
+            _currentVideoIndex++;
+            if (_currentVideoIndex < _contentList.Count)
             {
-                Console.WriteLine("Iniciando grabación...");
-                StartRecording();
-            }, "Error al iniciar la grabación.");
-        }
-
-        // Inicia la grabación
-        private void StartRecording()
-        {
-            string outputFile = Path.Combine(_recordingOutputPath, $"Recording_{DateTime.Now:yyyyMMdd_HHmmss}.mp4");
-            Console.WriteLine($"Guardando grabación en: {outputFile}");
-            // Aquí implementaríamos la lógica para usar FFmpeg o similar para capturar la transmisión
-        }
-
-        // Función para mostrar notificaciones de contenido
-        private void ShowNotification(string message)
-        {
-            MessageBox.Show(message, "Notificación", MessageBoxButton.OK, MessageBoxImage.Information);
-        }
-
-        // Función para manejar la reproducción en segundo plano
-        private void SetupBackgroundPlaybackTimer()
-        {
-            _backgroundPlaybackTimer = new Timer(10000); // Reproducir cada 10 segundos
-            _backgroundPlaybackTimer.Elapsed += BackgroundPlaybackTimer_Elapsed;
-            _backgroundPlaybackTimer.Start();
-        }
-
-        private void BackgroundPlaybackTimer_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            Dispatcher.Invoke(() =>
-            {
-                Console.WriteLine("Reproducción en segundo plano...");
-                PlayInBackground();
-            });
-        }
-
-        private void PlayInBackground()
-        {
-            var selectedPlaylist = _playlistManager.GetRandomPlaylist(60); // Duración de 60 minutos
-            foreach (var video in selectedPlaylist)
-            {
-                PlayVideo(video);
-                Console.WriteLine($"Reproduciendo en segundo plano: {video}");
+                _playerManager.Play(_contentList[_currentVideoIndex]);
+                UpdateNowPlayingText(_contentList[_currentVideoIndex]);
             }
         }
 
-        // Función para reproducir un video
-        private void PlayVideo(string filePath)
+        private void SaveData()
         {
-            if (!File.Exists(filePath))
-            {
-                Console.WriteLine($"Archivo no encontrado: {filePath}");
-                return;
-            }
-
-            Console.WriteLine($"Reproduciendo video: {filePath}");
-            // Aquí se integraría el MediaElement u otra biblioteca para reproducción real
+            string json = JsonSerializer.Serialize(_scheduledVideos);
+            File.WriteAllText(_dataFilePath, json);
         }
 
-        // Gestión de la cola de reproducción
-        private void ManageQueueButton_Click(object sender, RoutedEventArgs e)
+        private List<VideoItem> LoadData()
         {
-            HandleError(() =>
+            if (File.Exists(_dataFilePath))
             {
-                Console.WriteLine("Gestión de la cola de reproducción en progreso...");
-                // Aquí implementaríamos un cuadro de diálogo o interfaz para mover/eliminar elementos
-            }, "Error al gestionar la cola de reproducción.");
+                string json = File.ReadAllText(_dataFilePath);
+                return JsonSerializer.Deserialize<List<VideoItem>>(json);
+            }
+            return null;
         }
     }
-
-    public class ScheduledContent
-    {
-        public string FilePath { get; set; }
-        public DateTime? ScheduledTime { get; set; }
-    }
-
-    public class PlaylistManager
-    {
-        public string BasePath { get; }
-
-        public PlaylistManager(string basePath)
-        {
-            BasePath = basePath;
-        }
-
-        public List<string> GetCommercialsPlaylist()
-        {
-            return Directory.GetFiles(BasePath, "*commercial*.mp4").ToList();
-        }
-
-        public List<string> GetRandomPlaylist(int durationMinutes)
-        {
-            var files = Directory.GetFiles(BasePath, "*.mp4").ToList();
-            return files.OrderBy(_ => Guid.NewGuid()).Take(durationMinutes).ToList();
-        }
 }

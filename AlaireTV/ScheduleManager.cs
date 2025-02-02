@@ -3,55 +3,23 @@ using System.Collections.Generic;
 
 namespace AlaireTV
 {
-    public class ScheduleManager
+    public partial class ScheduleManager
     {
-        // Lista para almacenar las programaciones
-        private List<ScheduleItem> schedules;
+        private List<ScheduledProgram> schedules = new List<ScheduledProgram>();
 
-        public ScheduleManager()
+        public void AddSchedule(string title, DateTime startDate, TimeSpan duration, string videoPath)
         {
-            schedules = new List<ScheduleItem>();
+            schedules.Add(new ScheduledProgram { Title = title, StartDate = startDate, Duration = duration, FilePath = videoPath });
         }
 
-        // Método para agregar una nueva programación
-        public void AddSchedule(string title, DateTime date, string videoPath)
+        public void RemoveSchedule(ScheduledProgram program)
         {
-            var schedule = new ScheduleItem
-            {
-                Title = title,
-                Date = date,
-                VideoPath = videoPath
-            };
-
-            schedules.Add(schedule);
+            schedules.Remove(program);
         }
 
-        // Método para eliminar una programación existente
-        public void RemoveSchedule(ScheduleItem item)
-        {
-            if (schedules.Contains(item))
-            {
-                schedules.Remove(item);
-            }
-        }
-
-        // Método para obtener todas las programaciones
-        public List<ScheduleItem> GetSchedules()
+        public List<ScheduledProgram> GetSchedules()
         {
             return schedules;
-        }
-    }
-
-    // Clase para representar un elemento de programación
-    public class ScheduleItem
-    {
-        public string Title { get; set; }
-        public DateTime Date { get; set; }
-        public string VideoPath { get; set; }
-
-        public override string ToString()
-        {
-            return $"{Date:G} - {Title}";
         }
     }
 }
